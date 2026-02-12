@@ -1,0 +1,299 @@
+#!/bin/bash
+
+# --- Theme
+R=$(tput setaf 196) # Red
+G=$(tput setaf 46)  # Green
+Y=$(tput setaf 226) # Yellow
+B=$(tput setaf 39)  # Blue
+M=$(tput setaf 201) # Magenta
+C=$(tput setaf 51)  # Cyan
+W=$(tput setaf 255) # White
+D=$(tput setaf 244) # Grey
+BG_K=$(tput setab 234) # Dark Background
+BOLD=$(tput bold)
+RESET=$(tput sgr0)
+
+# --- UI  ---
+
+init_ui() {
+    tput smcup  # Alternate screen
+    tput civis  # Hide cursor
+    stty -echo  # Disable input echo
+}
+
+close_ui() {
+    stty echo
+    tput cnorm
+    tput rmcup
+}
+
+# greeting
+get_greeting() {
+    h=$(date +%H)
+    if [ $h -lt 12 ]; then echo "Good Morning";
+    elif [ $h -lt 18 ]; then echo "Good Afternoon";
+    else echo "Good Evening"; fi
+}
+
+draw_box() {
+    local y=$1
+    local x=$2
+    local w=$3
+    local h=$4
+    local title=" $5 "
+    local color=$6
+    
+    local H="─"
+    local V="│"
+    local TLC="┌"
+    local TRC="┐"
+    local BLC="└"
+    local BRC="┘"
+    
+    tput cup $y $x
+    printf "${color}${TLC}"
+    for ((i=0; i<w-2; i++)); do printf "${H}"; done
+    printf "${TRC}${RESET}"
+    
+    for ((i=1; i<h-1; i++)); do
+        tput cup $((y+i)) $x
+        printf "${color}${V}${RESET}"
+        tput cup $((y+i)) $((x+w-1))
+        printf "${color}${V}${RESET}"
+    done
+    
+    tput cup $((y+h-1)) $x
+    printf "${color}${BLC}"
+    for ((i=0; i<w-2; i++)); do printf "${H}"; done
+    printf "${BRC}${RESET}"
+    
+    if [[ ! -z "$5" ]]; then
+        tput cup $y $((x + 2))
+        printf "${color}${BOLD}${title}${RESET}"
+    fi
+}
+
+center_text() {
+    local y=$1
+    local text="$2"
+    local w=$(tput cols)
+    local padding=$(( (w - ${#text}) / 2 ))
+    tput cup $y $padding
+    echo -e "$text"
+}
+
+# Footer 
+draw_menu_footer() {
+    local h=$(tput lines)
+    tput cup $((h-1)) 0
+    printf "${BG_K}${W} Press [1-5] to inspect  |  [Q] to Quit ${RESET}"
+}
+
+# Footer for Detail Pages
+draw_back_footer() {
+    local h=$(tput lines)
+    tput cup $((h-1)) 0
+    printf "${BG_K}${Y}${BOLD} Press [ENTER] or any key to go back... ${RESET}"
+}
+
+# --- VIEWS ---
+    
+show_menu() {
+    tput clear
+    local w=$(tput cols)
+    local h=$(tput lines)
+    local greeting=$(get_greeting)
+    
+    #banner code
+    echo "${C}${BOLD}" 
+    
+    
+    tput cup 2 0
+    center_text 2 '  $$$$$$\ $$\     $$\  $$$$$$\   $$$$$$\   $$$$$$\  $$$$$$$\  $$$$$$$$\ '
+    center_text 3 ' $$  __$$\\$$\   $$  |$$  __$$\ $$  __$$\ $$  __$$\ $$  __$$\ $$  _____|'
+    center_text 4 ' $$ /  \__|\$$\ $$  / $$ /  \__|$$ /  \__|$$ /  $$ |$$ |  $$ |$$ |      '
+    center_text 5 ' \$$$$$$\   \$$$$  /  \$$$$$$\  $$ |      $$ |  $$ |$$$$$$$  |$$$$$\    '
+    center_text 6 '  \____$$\   \$$  /    \____$$\ $$ |      $$ |  $$ |$$  ____/ $$  __|   '
+    center_text 7 ' $$\   $$ |   $$ |    $$\   $$ |$$ |  $$\ $$ |  $$ |$$ |      $$ |      '
+    center_text 8 ' \$$$$$$  |   $$ |    \$$$$$$  |\$$$$$$  | $$$$$$  |$$ |      $$$$$$$$\ '
+    center_text 9 '  \______/    \__|     \______/  \______/  \______/ \__|      \________|'
+    echo "${RESET}"
+
+    
+    tput cup 11 0
+    center_text 11 "${W}System Insight & Accessibility Tool v0.001${RESET}"
+
+    
+    local box_w=50
+    local box_h=14
+    local box_x=$(( (w - box_w) / 2 ))
+    local box_y=14  
+    
+    draw_box $box_y $box_x $box_w $box_h "MAIN MENU" "$B"
+    
+    # Menu Content
+    tput cup $((box_y+2)) $((box_x+4)); echo "${W}$greeting, $(whoami)!${RESET}"
+    tput cup $((box_y+3)) $((box_x+4)); echo "${D}Select a component to inspect:${RESET}"
+    
+    tput cup $((box_y+5)) $((box_x+4)); echo "${G}[1]${RESET} 🖥️   System Identity"
+    tput cup $((box_y+6)) $((box_x+4)); echo "${G}[2]${RESET} 🧠  CPU Intelligence"
+    tput cup $((box_y+7)) $((box_x+4)); echo "${G}[3]${RESET} 💾  Memory & Storage"
+    tput cup $((box_y+8)) $((box_x+4)); echo "${G}[4]${RESET} 🌐  Network Status"
+    tput cup $((box_y+9)) $((box_x+4)); echo "${G}[5]${RESET} ℹ️   About & Credits"
+    tput cup $((box_y+11)) $((box_x+4)); echo "${R}[Q]${RESET} 🚪  Exit Application"
+    
+    draw_menu_footer
+}
+
+view_system() {
+    tput clear
+    local w=$(tput cols)
+    
+    draw_box 2 4 $((w-8)) 10 "SYSTEM IDENTITY" "$C"
+    
+    tput cup 4 6; echo "${W}Hostname    :${RESET} $(hostname)"
+    tput cup 5 6; echo "${W}OS Distro   :${RESET} $(grep PRETTY_NAME /etc/os-release | cut -d= -f2 | tr -d '"')"
+    tput cup 6 6; echo "${W}Kernel      :${RESET} $(uname -r)"
+    tput cup 7 6; echo "${W}Uptime      :${RESET} $(uptime -p)"
+    tput cup 8 6; echo "${W}Shell       :${RESET} $SHELL"
+    
+    draw_box 13 4 $((w-8)) 8 "GUIDE: TERMINOLOGY" "$D"
+    tput cup 15 6; echo "${Y}Kernel:${RESET} The core of your OS that talks to hardware."
+    tput cup 16 6; echo "${Y}Distro:${RESET} Your specific Linux version (Ubuntu, Fedora, etc)."
+    tput cup 17 6; echo "${Y}Uptime:${RESET} Time since last reboot."
+    
+    draw_back_footer
+    read -rsn1
+}
+
+view_cpu() {
+    tput clear
+    local w=$(tput cols)
+    
+    draw_box 2 4 $((w-8)) 12 "CPU INTELLIGENCE" "$C"
+    
+    local model=$(lscpu | grep "Model name" | head -1 | cut -d: -f2 | xargs)
+    local cores=$(nproc)
+    local load=$(awk '{print $1}' /proc/loadavg)
+    
+    tput cup 4 6; echo "${W}Model       :${RESET} ${model:0:40}..."
+    tput cup 5 6; echo "${W}Cores       :${RESET} $cores Threads"
+    tput cup 6 6; echo "${W}Load Avg    :${RESET} $load (1 min)"
+    
+    tput cup 8 6; echo "${BOLD}Top Processes:${RESET}"
+    ps -eo comm,%cpu --sort=-%cpu | head -n 4 | tail -n 3 | awk '{printf "   • %-15s %s%%\n", $1, $2}' | while read line; do
+        echo "      $line"
+    done
+    
+    draw_box 15 4 $((w-8)) 8 "GUIDE: CPU STATS" "$D"
+    tput cup 17 6; echo "${Y}Load Avg:${RESET} If this is higher than $cores, your PC is slow."
+    tput cup 18 6; echo "${Y}Threads :${RESET} More threads = better multitasking."
+    
+    draw_back_footer
+    read -rsn1
+}
+
+view_mem() {
+    tput clear
+    local w=$(tput cols)
+    
+    draw_box 2 4 $((w-8)) 12 "MEMORY & STORAGE" "$C"
+    
+    local mem_tot=$(free -h | awk '/^Mem:/ {print $2}')
+    local mem_used=$(free -h | awk '/^Mem:/ {print $3}')
+    local swap=$(free -h | awk '/^Swap:/ {print $2}')
+    
+    tput cup 4 6; echo "${W}Total RAM   :${RESET} $mem_tot"
+    tput cup 5 6; echo "${W}Used RAM    :${RESET} $mem_used"
+    tput cup 6 6; echo "${W}Swap        :${RESET} $swap"
+    
+    tput cup 8 6; echo "${BOLD}Disk Usage:${RESET}"
+    df -h | grep -E '^/dev/' | awk '{printf "   • %-10s Used: %-5s on %s\n", $1, $5, $6}' | head -n 3 | while read line; do
+         echo "      $line"
+    done
+
+    draw_box 15 4 $((w-8)) 8 "GUIDE: MEMORY" "$D"
+    tput cup 17 6; echo "${Y}RAM   :${RESET} Fast memory for running apps."
+    tput cup 18 6; echo "${Y}Swap  :${RESET} Slow emergency memory on the disk."
+    
+    draw_back_footer
+    read -rsn1
+}
+
+view_net() {
+    tput clear
+    local w=$(tput cols)
+    
+    draw_box 2 4 $((w-8)) 12 "NETWORK STATUS" "$C"
+    
+    local ip=$(hostname -I | cut -d' ' -f1)
+    local dns=$(cat /etc/resolv.conf 2>/dev/null | grep nameserver | head -1 | awk '{print $2}')
+    
+    tput cup 4 6; echo "${W}Local IP    :${RESET} ${ip:-Disconnected}"
+    tput cup 5 6; echo "${W}DNS Server  :${RESET} ${dns:-Unknown}"
+    
+    tput cup 7 6; echo "${BOLD}Active Interfaces:${RESET}"
+    local i=0
+    ip -o link show | awk -F': ' '{print $2}' | head -n 3 | while read iface; do
+        tput cup $((8+i)) 6
+        echo "   • $iface"
+        ((i++))
+    done
+    
+    draw_box 15 4 $((w-8)) 8 "GUIDE: NETWORKING" "$D"
+    tput cup 17 6; echo "${Y}Local IP:${RESET} Your internal address on the Wi-Fi."
+    tput cup 18 6; echo "${Y}DNS     :${RESET} Server that finds websites for you."
+    
+    draw_back_footer
+    read -rsn1
+}
+
+view_about() {
+    tput clear
+    local w=$(tput cols)
+    local h=$(tput lines)
+    
+    # Calculate center box
+    local bw=54
+    local bh=16
+    local bx=$(( (w - bw) / 2 ))
+    local by=$(( (h - bh) / 2 ))
+    
+    draw_box $by $bx $bw $bh "ABOUT SYSCOPE" "$M"
+    
+    tput cup $((by+2)) $((bx+4)); echo "${BOLD}SYSCOPE v0.001${RESET}"
+    tput cup $((by+3)) $((bx+4)); echo "${D}Advanced System Insight Utility${RESET}"
+    
+    tput cup $((by+5)) $((bx+4)); echo "Syscope is designed to give you a clean, deep"
+    tput cup $((by+6)) $((bx+4)); echo "look into your Linux system without the"
+    tput cup $((by+7)) $((bx+4)); echo "clutter of complex commands."
+    
+    tput cup $((by+9)) $((bx+4)); echo "${C}${BOLD}Created By:${RESET}  Gaurav Chaubey"
+    tput cup $((by+11)) $((bx+4)); echo "${W}GitHub:${RESET}      github.com/gauravchaubey66"
+    tput cup $((by+12)) $((bx+4)); echo "${W}LinkedIn:${RESET}    linkedin.com/in/gauravchaubey66"
+    
+    draw_back_footer
+    read -rsn1
+}
+
+# --- MAIN LOOP ---
+
+trap close_ui INT
+init_ui
+
+while true; do
+    show_menu
+    read -rsn1 key
+    
+    case "$key" in
+        1) view_system ;;
+        2) view_cpu ;;
+        3) view_mem ;;
+        4) view_net ;;
+        5) view_about ;;
+        q|Q) break ;;
+    esac
+done
+
+close_ui
+echo "Thank you for using Syscope v0.001."
