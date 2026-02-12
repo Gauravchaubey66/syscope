@@ -125,7 +125,7 @@ sudo mv syscope /usr/local/bin/
 
 ## 🤝 Contributing
 
-We love contributors! 💡 Whether you're a design wizard or a backend pro, your help is welcome.
+I love contributors! 💡 Whether you're a design wizard or a backend pro, your help is welcome.
 
 🎨 **UI/UX Design:** Better ASCII art or color themes.
 ➕ **New Modules:** GPU, Temperature, or Battery monitoring.
